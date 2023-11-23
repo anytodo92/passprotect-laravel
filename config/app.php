@@ -168,6 +168,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\DatabaseServiceProvider::class,
     ])->toArray(),
 
     /*
@@ -185,4 +186,12 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+    /*
+    |--------------------------------------------------------------------------
+    | API VERSION
+    |--------------------------------------------------------------------------
+    |
+    |
+    */
+    'api-version' => env('api-version', 'v1'),
 ];

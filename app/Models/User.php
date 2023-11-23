@@ -18,9 +18,15 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'user_name',
+        'user_email',
+        'user_password_hash',
+        'is_pro',
+        'stripe_id',
+        'subscription_id',
+        'logo',
+        'balance',
+        'paypal_id'
     ];
 
     /**
@@ -29,8 +35,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'user_password_hash'
     ];
 
     /**
@@ -39,7 +44,6 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'user_password_hash' => 'hashed',
     ];
 }
