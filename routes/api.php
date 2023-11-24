@@ -18,17 +18,23 @@ use \App\Http\Controllers\AuthController;
 Route::group([
     'prefix' => config('app.api-version')
 ], function () {
-    Route::group(['prefix' => 'notions11'], function () {
-        Route::group(['prefix' => 'auth'], function () {
-            Route::post('/login', [AuthController::class, 'login']);
-            Route::post('/register', [AuthController::class, 'register']);
-        });
-    });
-
     Route::group(['prefix' => 'passdropit'], function () {
         Route::group(['prefix' => 'auth'], function () {
             Route::post('/login', [AuthController::class, 'login']);
             Route::post('/register', [AuthController::class, 'register']);
+            Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+            Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])
+                ->name('reset-password');
+        });
+    });
+
+    Route::group(['prefix' => 'notions11'], function () {
+        Route::group(['prefix' => 'auth'], function () {
+            Route::post('/login', [AuthController::class, 'login']);
+            Route::post('/register', [AuthController::class, 'register']);
+            Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+            Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])
+                ->name('reset-password');
         });
     });
 });
@@ -37,7 +43,19 @@ Route::group([
     'prefix' => config('app.api-version'),
     'middleware' => ['auth:sanctum']
 ], function () {
+    Route::group(['prefix' => 'passdropit'], function () {
+        Route::prefix('auth')->group(function () {
+            Route::post('/reset-password', [AuthController::class, 'changePassword']);
+            Route::post('/logout', [AuthController::class, 'logout']);
+        });
+    });
 
+    Route::group(['prefix' => 'notions11'], function () {
+        Route::prefix('auth')->group(function () {
+            Route::post('/reset-password', [AuthController::class, 'changePassword']);
+            Route::post('/logout', [AuthController::class, 'logout']);
+        });
+    });
 });
 
 //Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
