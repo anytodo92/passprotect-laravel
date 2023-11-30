@@ -18,7 +18,7 @@ class AuthController extends Controller
         if (Auth::guard('sanctum')->user()) {
             return response()->json([
                 'message' => 'Already authenticated'
-            ], 201);
+            ]);
         }
 
         $request->validate([
@@ -27,23 +27,43 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('user_email', $request->input('email'))
-            ->firstOrFail();
+            ->first();
+
         if (!$user) {
             return response()->json([
+                'success' => false,
                 'message' => 'Could not find user'
-            ], 503);
+            ], 404);
         }
 
         $ret = SecurePassword::check($request->input('password'), $user->user_password_hash);
         if (!$ret) {
             return response()->json([
+                'success' => false,
                 'message' => 'Does not match password',
                 'data' => $user->user_password
             ], 503);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        $level = $user->is_pro ? 1 : 0;
+        $level = $user->user_email == 'shawn-passdropit@shawntaylorphoto.com'
+            || $user->user_email == 'robinkuipers@hotmail.com' ? 2 : $level;
+        $user = [
+            'id' => $user->id,
+            'user_name' => $user->user_name,
+            'user_email' => $user->user_email,
+            'level' => $level,
+            'stripe_id' => $user->stripe_id,
+            'subscription_id' => $user->subscription_id,
+            'paypal_id' => $user->paypal_id,
+            'balance' => $user->balance,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ];
         return response()->json([
+            'success' => true,
             'user' => $user,
             'auth_token' => $token,
             'token_type' => 'bearer'
@@ -51,25 +71,26 @@ class AuthController extends Controller
     }
 
     public function register(Request $request): JsonResponse {
+
         if (Auth::guard('sanctum')->user()) {
             return response()->json([
                 'message' => 'Already authenticated'
-            ], 201);
+            ]);
         }
 
         $request->validate([
-            'firstname' => ['required'],
-            'lastname' => ['required'],
+            'firstName' => ['required'],
+            'lastName' => ['required'],
             'email' => ['required', 'email'],
             'password' => ['required', 'min:8']
         ]);
 
-        $firstName = $request->string('firstname')->trim();
-        $lastName = $request->string('lastname')->trim();
+        $firstName = $request->string('firstName')->trim();
+        $lastName = $request->string('lastName')->trim();
         $email = $request->string('email')->trim();
         $password = $request->string('password')->trim()->value();
 
-        $user = User::where('user_name', '=', $firstName.' '.$lastName)->get();
+        $user = User::where('user_name', '=', $firstName.' '.$lastName)->first();
         if ($user) {
             return response()->json([
                 'success' => false,
@@ -77,7 +98,7 @@ class AuthController extends Controller
             ]);
         }
 
-        $user = User::where('user_email', '=', $email)->get();
+        $user = User::where('user_email', '=', $email)->first();
         if ($user) {
             return response()->json([
                 'success' => false,
@@ -116,16 +137,6 @@ class AuthController extends Controller
         ]);
     }
 
-    public function resetPassword(Request $request, string $token): JsonResponse {
-        if (Auth::guard('sanctum')->user()) {
-            return response()->json([
-                'message' => 'Already authenticated',
-                'token' => $token
-            ], 201);
-        }
-        return response()->json([]);
-    }
-
     public function forgotPassword(Request $request): JsonResponse {
         if (Auth::guard('sanctum')->user()) {
             return response()->json([
@@ -148,6 +159,23 @@ class AuthController extends Controller
 
         $url = env('FRONTEND_SITE_URL').'/reset-password/'.Hash::make();
         //Todo: Sending email
+
+        return response()->json([]);
+    }
+
+    public function resetPassword(Request $request): JsonResponse {
+        if (Auth::guard('sanctum')->user()) {
+            return response()->json([
+                'message' => 'Already authenticated'
+            ], 201);
+        }
+
+        $request->validate([
+            'token' => ['required'],
+            'new_password' => ['required', 'min:8']
+        ]);
+
+        //Todo: Implement reset password feature;
 
         return response()->json([]);
     }
