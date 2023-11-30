@@ -126,6 +126,11 @@ class SecurePassword
             return false;
         }
 
-        return true;
+       $status = 0;
+       for ($i = 0; $i < strlen($ret); $i++) {
+           $status |= (ord($ret[$i]) ^ ord($hash[$i]));
+       }
+
+       return $status === 0;
     }
 }
