@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\AuthController;
-
+use \App\Http\Controllers\LinkController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -48,12 +48,21 @@ Route::group([
             Route::post('/reset-password', [AuthController::class, 'changePassword']);
             Route::post('/logout', [AuthController::class, 'logout']);
         });
+        Route::prefix('link')->group(function () {
+            Route::post('/check-google-link', [LinkController::class, 'checkGoogleLink']);
+            Route::post('/save-link', [LinkController::class, 'saveLink']);
+        });
+
     });
 
     Route::group(['prefix' => 'notions11'], function () {
         Route::prefix('auth')->group(function () {
             Route::post('/reset-password', [AuthController::class, 'changePassword']);
             Route::post('/logout', [AuthController::class, 'logout']);
+        });
+
+        Route::prefix('link')->group(function () {
+            Route::post('/save-link', [LinkController::class, 'saveLink']);
         });
     });
 });

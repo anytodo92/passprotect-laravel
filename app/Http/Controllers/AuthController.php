@@ -141,7 +141,7 @@ class AuthController extends Controller
         if (Auth::guard('sanctum')->user()) {
             return response()->json([
                 'message' => 'Already authenticated'
-            ], 201);
+            ]);
         }
 
         $request->validate([
@@ -167,7 +167,7 @@ class AuthController extends Controller
         if (Auth::guard('sanctum')->user()) {
             return response()->json([
                 'message' => 'Already authenticated'
-            ], 201);
+            ]);
         }
 
         $request->validate([
