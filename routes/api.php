@@ -26,6 +26,10 @@ Route::group([
             Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])
                 ->name('reset-password');
         });
+
+        Route::prefix('link')->group(function () {
+            Route::post('/save-link', [LinkController::class, 'saveLink']);
+        });
     });
 
     Route::group(['prefix' => 'notions11'], function () {
@@ -35,6 +39,10 @@ Route::group([
             Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
             Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])
                 ->name('reset-password');
+        });
+
+        Route::prefix('link')->group(function () {
+            Route::post('/save-link', [LinkController::class, 'saveLink']);
         });
     });
 });
@@ -50,7 +58,6 @@ Route::group([
         });
         Route::prefix('link')->group(function () {
             Route::post('/check-google-link', [LinkController::class, 'checkGoogleLink']);
-            Route::post('/save-link', [LinkController::class, 'saveLink']);
         });
 
     });
@@ -59,10 +66,6 @@ Route::group([
         Route::prefix('auth')->group(function () {
             Route::post('/reset-password', [AuthController::class, 'changePassword']);
             Route::post('/logout', [AuthController::class, 'logout']);
-        });
-
-        Route::prefix('link')->group(function () {
-            Route::post('/save-link', [LinkController::class, 'saveLink']);
         });
     });
 });

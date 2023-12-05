@@ -85,7 +85,7 @@ class LinkController extends Controller
             'passdrop_pwd' => $password,
             'service' => config('constants.service_type')[$service],
             'filename' => $fileName,
-            'user_id' => auth('sanctum')->user()->id,
+            'user_id' => auth('sanctum')->user() ? auth('sanctum')->user()->id : 0,
             'is_verified' => config('constants.is_verified'),
             'download_count' => 0,
             'link_type' => $linkType,
