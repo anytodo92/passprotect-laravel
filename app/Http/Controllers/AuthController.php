@@ -11,6 +11,25 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    public function getResponseUserData($user): array {
+        $level = $user->is_pro ? config('constants.user_level.pro') : config('constants.user_level.normal');
+        $level = $user->user_email == in_array($user->user_email, config('constants.admin_email')) ? config('constants.user_level.super') : $level;
+        $ret = [
+            'id' => $user->id,
+            'user_name' => $user->user_name,
+            'user_email' => $user->user_email,
+            'level' => $level,
+            'stripe_id' => $user->stripe_id,
+            'subscription_id' => $user->subscription_id,
+            'paypal_id' => $user->paypal_id,
+            'balance' => $user->balance,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ];
+
+        return $ret;
+    }
+
     /**
      * Handle an authentication attempt.
      */
@@ -47,21 +66,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        $level = $user->is_pro ? 1 : 0;
-        $level = $user->user_email == 'shawn-passdropit@shawntaylorphoto.com'
-            || $user->user_email == 'robinkuipers@hotmail.com' ? 2 : $level;
-        $user = [
-            'id' => $user->id,
-            'user_name' => $user->user_name,
-            'user_email' => $user->user_email,
-            'level' => $level,
-            'stripe_id' => $user->stripe_id,
-            'subscription_id' => $user->subscription_id,
-            'paypal_id' => $user->paypal_id,
-            'balance' => $user->balance,
-            'created_at' => $user->created_at,
-            'updated_at' => $user->updated_at,
-        ];
+        $user = $this->getResponseUserData($user);
         return response()->json([
             'success' => true,
             'user' => $user,
@@ -110,7 +115,7 @@ class AuthController extends Controller
             'user_name' => $firstName . ' ' . $lastName,
             'user_email' => $email,
             'user_password_hash' => SecurePassword::make($password, PASSWORD_BCRYPT_C),
-            'is_pro' => config('constants.user-level.normal'),
+            'is_pro' => config('constants.user_level.normal'),
             'paypal_id' => 0,
             'stripe_id' => 0,
             'subscription_id' => 0,
@@ -128,6 +133,8 @@ class AuthController extends Controller
         //Todo: Email scheduler
 
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        $user = $this->getResponseUserData($user);
 
         return response()->json([
             'success' => true,
@@ -182,18 +189,18 @@ class AuthController extends Controller
 
     public function changePassword(Request $request): JsonResponse {
         $request->validate([
-            'old_password' => ['required'],
-            'new_password' => ['required', 'min:8']
+            'currentPassword' => ['required'],
+            'newPassword' => ['required', 'min:8']
         ]);
 
         $user = Auth::guard('sanctum')->user();
-        $oldPassword = $request->string('old_password')->trim()->value();
-        $newPassword = $request->string('new_password')->trim()->value();
+        $currentPassword = $request->string('currentPassword')->trim()->value();
+        $newPassword = $request->string('newPassword')->trim()->value();
 
-        if (!SecurePassword::check($oldPassword, $user->user_password_hash)) {
+        if (!SecurePassword::check($currentPassword, $user->user_password_hash)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Please enter correct old password'
+                'message' => 'Please enter correct current password'
             ]);
         }
 
