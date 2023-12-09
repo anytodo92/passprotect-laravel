@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\AuthController;
 use \App\Http\Controllers\LinkController;
+use \App\Http\Controllers\UserController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -26,6 +27,14 @@ Route::group([
             Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])
                 ->name('reset-password');
         });
+
+        Route::prefix('link')->group(function () {
+            Route::post('/save-link', [LinkController::class, 'saveLink']);
+        });
+
+        Route::prefix('user')->group(function () {
+            Route::post('/commit-pro', [UserController::class, 'commitPro']);
+        });
     });
 
     Route::group(['prefix' => 'notions11'], function () {
@@ -35,6 +44,14 @@ Route::group([
             Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
             Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])
                 ->name('reset-password');
+        });
+
+        Route::prefix('link')->group(function () {
+            Route::post('/save-link', [LinkController::class, 'saveLink']);
+        });
+
+        Route::prefix('user')->group(function () {
+            Route::post('/commit-pro', [UserController::class, 'commitPro']);
         });
     });
 });
@@ -48,11 +65,20 @@ Route::group([
             Route::post('/reset-password', [AuthController::class, 'changePassword']);
             Route::post('/logout', [AuthController::class, 'logout']);
         });
+
         Route::prefix('link')->group(function () {
             Route::post('/check-google-link', [LinkController::class, 'checkGoogleLink']);
-            Route::post('/save-link', [LinkController::class, 'saveLink']);
+            Route::get('/get-list', [LinkController::class, 'getList']);
+            Route::post('/update-link', [LinkController::class, 'updateLink']);
+            Route::delete('/delete-link/{id}', [LinkController::class, 'deleteLink']);
+            Route::post('/analytics', [LinkController::class, 'analytics']);
         });
 
+        Route::prefix('user')->group(function () {
+            Route::get('/subscription', [UserController::class, 'subscription']);
+            Route::post('/upgrade-pro', [UserController::class, 'upgradePro']);
+            Route::get('/cancel-pro', [UserController::class, 'cancelPro']);
+        });
     });
 
     Route::group(['prefix' => 'notions11'], function () {
@@ -62,7 +88,16 @@ Route::group([
         });
 
         Route::prefix('link')->group(function () {
-            Route::post('/save-link', [LinkController::class, 'saveLink']);
+            Route::get('/get-list', [LinkController::class, 'getList']);
+            Route::post('/update-link', [LinkController::class, 'updateLink']);
+            Route::delete('/delete-link/{id}', [LinkController::class, 'deleteLink']);
+            Route::post('/analytics', [LinkController::class, 'analytics']);
+        });
+
+        Route::prefix('user')->group(function () {
+            Route::get('/subscription', [UserController::class, 'subscription']);
+            Route::post('/upgrade-pro', [UserController::class, 'upgradePro']);
+            Route::get('/cancel-pro', [UserController::class, 'cancelPro']);
         });
     });
 });
