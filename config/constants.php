@@ -21,8 +21,8 @@ return [
         3 => 'folder'
     ],
     'stripe' => [
-        'passdropit_key' => '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',
-        'notions11_key' => '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'
+        'passdropit_key' => env('STRIPE_PASSDROPIT_KEY'),
+        'notions11_key' => env('STRIPE_NOTIONS11_KEY')
     ],
     'site_url' => [
         'passdropit' => 'https://www.passdropit.com',
