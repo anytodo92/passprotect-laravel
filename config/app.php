@@ -175,6 +175,8 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
+        App\Providers\DatabaseServiceProvider::class,
+        \Ixudra\Curl\CurlServiceProvider::class,
     ],
 
     /*
@@ -229,6 +231,8 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
 
+        'Curl' => \Ixudra\Curl\CurlServiceProvider::class
     ],
 
+    'api-version' => env('api-version', 'v1'),
 ];
