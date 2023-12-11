@@ -38,5 +38,5 @@ class User extends Authenticatable
         'user_password_hash'
     ];
 
-   
+
 }
