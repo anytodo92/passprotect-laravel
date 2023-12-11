@@ -24,8 +24,7 @@ Route::group([
             Route::post('/login', [AuthController::class, 'login']);
             Route::post('/register', [AuthController::class, 'register']);
             Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-            Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])
-                ->name('reset-password');
+//            Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('reset-password');
         });
 
         Route::prefix('link')->group(function () {
@@ -42,8 +41,7 @@ Route::group([
             Route::post('/login', [AuthController::class, 'login']);
             Route::post('/register', [AuthController::class, 'register']);
             Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-            Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])
-                ->name('reset-password');
+//            Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('reset-password');
         });
 
         Route::prefix('link')->group(function () {
@@ -78,6 +76,8 @@ Route::group([
             Route::get('/subscription', [UserController::class, 'subscription']);
             Route::post('/upgrade-pro', [UserController::class, 'upgradePro']);
             Route::get('/cancel-pro', [UserController::class, 'cancelPro']);
+            Route::post('/upload-logo', [UserController::class, 'uploadLogo']);
+            Route::delete('/delete-logo', [UserController::class, 'deleteLogo']);
         });
     });
 
@@ -98,6 +98,8 @@ Route::group([
             Route::get('/subscription', [UserController::class, 'subscription']);
             Route::post('/upgrade-pro', [UserController::class, 'upgradePro']);
             Route::get('/cancel-pro', [UserController::class, 'cancelPro']);
+            Route::post('/upload-logo', [UserController::class, 'uploadLogo']);
+            Route::delete('/delete-logo', [UserController::class, 'deleteLogo']);
         });
     });
 });
