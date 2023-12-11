@@ -7,6 +7,7 @@ use App\Models\PaidMembership;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Stripe\StripeClient;
 
 class UserController extends Controller
@@ -118,7 +119,7 @@ class UserController extends Controller
             if ($user->balance < config('constants.prices.upgrade')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Your balance is not enough. Please charge'
+                    'message' => ' Please charge' . $userId
                 ]);
             }
 
@@ -227,6 +228,59 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'user' => $user
+        ]);
+    }
+
+    public function uploadLogo(Request $request): JsonResponse {
+        $file = $request->file('logo');
+
+        if (!$file->isValid()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please choose a valid file'
+            ]);
+        }
+
+        $isPassdropitRequest = $request->is('api/'.config('app.api-version').'/passdropit/*');
+        $ret = $file->store('public/uploads'.($isPassdropitRequest ? '/passdropit' : '/notions11'));
+        if ($ret === FALSE) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save to storage'
+            ]);
+        }
+
+        $path = str_replace('public/', '', $ret);
+        $user = User::where('id', auth('sanctum')->user()->id)->first();
+        $user->logo = $path;
+        if (!$user->save()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save a file path'
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'file' => $path
+        ]);
+    }
+
+    public function deleteLogo(): JsonResponse {
+        $userId = auth('sanctum')->user()->id;
+        $user = User::where('id', $userId)->first();
+
+        $ret = Storage::delete('/public/'.$user->logo);
+        $user->logo = '';
+        $bl = $user->save();
+        if (!$bl) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Delete is failed'
+            ]);
+        }
+        return response()->json([
+            'success' => $ret,
         ]);
     }
 }
