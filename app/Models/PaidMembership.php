@@ -14,5 +14,6 @@ class PaidMembership extends Model
         'user_id',
         'type',
         'amount',
+        'status',
     ];
 }

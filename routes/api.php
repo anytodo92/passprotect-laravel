@@ -78,6 +78,8 @@ Route::group([
             Route::get('/cancel-pro', [UserController::class, 'cancelPro']);
             Route::post('/upload-logo', [UserController::class, 'uploadLogo']);
             Route::delete('/delete-logo', [UserController::class, 'deleteLogo']);
+            Route::post('/update-paypal', [UserController::class, 'updatePaypal']);
+            Route::post('/get-earning-link-list', [UserController::class, 'getEarningLinkList']);
         });
     });
 
@@ -100,6 +102,8 @@ Route::group([
             Route::get('/cancel-pro', [UserController::class, 'cancelPro']);
             Route::post('/upload-logo', [UserController::class, 'uploadLogo']);
             Route::delete('/delete-logo', [UserController::class, 'deleteLogo']);
+            Route::post('/update-paypal', [UserController::class, 'updatePaypal']);
+            Route::post('/get-earning-link-list', [UserController::class, 'getEarningLinkList']);
         });
     });
 });

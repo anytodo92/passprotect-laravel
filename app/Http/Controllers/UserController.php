@@ -7,6 +7,7 @@ use App\Models\PaidMembership;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Stripe\StripeClient;
 
@@ -62,8 +63,8 @@ class UserController extends Controller
             'paymentMode' => 'required'
         ]);
 
-        $paymentMode = $request->integer('paymentMode', config('constants.payment_mode.balance'));
-        if ($paymentMode === config('constants.payment_mode.credit')) {
+        $paymentMode = intval($request->input('paymentMode', config('constants.payment_mode.balance')));
+        if ($paymentMode === config('constants.payment_mode.stripe')) {
             $isPassdropitRequest = $request->is('api/'.config('app.api-version').'/passdropit/*');
             $stripeKey = $isPassdropitRequest ? config('constants.stripe.passdropit_key') : config('constants.stripe.notions11_key');
             $stripe = new StripeClient($stripeKey);
@@ -164,9 +165,9 @@ class UserController extends Controller
 //            'userId' => 'required',
 //        ]);
 
-        $stripeId = $request->string('stripeId')->value();
-        $subscriptionId = $request->string('subscriptionId')->value();
-        $userId = $request->integer('userId');
+        $stripeId = trim($request->input('stripeId'));
+        $subscriptionId = trim($request->input('subscriptionId'));
+        $userId = intval($request->input('userId'));
 
         $user = User::where('id', $userId)->first();
         if (!$user) {
@@ -281,6 +282,85 @@ class UserController extends Controller
         }
         return response()->json([
             'success' => $ret,
+        ]);
+    }
+
+    public function updatePaypal(Request $request): JsonResponse {
+        $request->validate([
+            'paypalEmail' => 'required|email'
+        ]);
+
+        $user = User::where('id', auth('sanctum')->user()->id)->first();
+        $user->paypal_id = trim($request->input('paypalEmail'));
+        if ($user->save()) {
+            return response()->json([
+                'success' => true
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'The operation is failed'
+            ]);
+        }
+    }
+
+    public function getEarningLinkList(Request $request): JsonResponse {
+        $request->validate([
+            'period' => 'required'
+        ]);
+
+        $period = $request->input('period');
+        $userId = auth('sanctum')->user()->id;
+
+        if ($period === '1') {
+            $ret = DB::table('')
+                ->fromSub(function ($query) {
+                    $query->select(
+                        DB::raw('count(link_id) as count'), 'link_id', 'amount as price', DB::raw('CAST(SUM(amount) as signed) as total'), 'status'
+                    )
+                        ->from('paid_links')
+                        ->groupBy(['status', 'link_id', 'amount'])
+                        ->orderBy('created_at', 'desc');
+                }, 'a')
+                ->join(DB::raw('file_list_user b'), 'a.link_id', '=', 'b.id')
+                ->select('a.link_id', 'a.status', 'a.price', 'a.total', 'a.count', 'b.passdrop_url')
+                ->where('b.user_id', $userId)
+                ->where('a.status', config('constants.payment_status.process'))
+                ->get();
+        } else if ($period === '2') {
+            $ret = DB::table('')
+                ->fromSub(function ($query) {
+                    $query->select(
+                        DB::raw('count(link_id) as count'), 'link_id', 'amount as price', DB::raw('CAST(SUM(amount) as signed) as total'), 'status'
+                    )
+                        ->from('paid_links')
+                        ->groupBy(['status', 'link_id', 'amount'])
+                        ->orderBy('created_at', 'desc');
+                }, 'a')
+                ->join(DB::raw('file_list_user b'), 'a.link_id', '=', 'b.id')
+                ->select('a.link_id', 'a.status', 'a.price', 'a.total', 'a.count', 'b.passdrop_url')
+                ->where('b.user_id', $userId)
+                ->get();
+        } else {
+            $ret = DB::table('')
+                ->fromSub(function ($query) use ($period) {
+                    $query->select(
+                        DB::raw('count(link_id) as count'), 'link_id', 'amount as price', DB::raw('CAST(SUM(amount) as signed) as total'), 'status'
+                    )
+                        ->from('paid_links')
+                        ->where(DB::raw('DATE_FORMAT(created_at, \'%Y-%m\')'), '=', $period)
+                        ->groupBy(['status', 'link_id', 'amount'])
+                        ->orderBy('created_at', 'desc');
+                }, 'a')
+                ->join(DB::raw('file_list_user b'), 'a.link_id', '=', 'b.id')
+                ->select('a.link_id', 'a.status', 'a.price', 'a.total', 'a.count', 'b.passdrop_url')
+                ->where('b.user_id', $userId)
+                ->get();
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $ret
         ]);
     }
 }
