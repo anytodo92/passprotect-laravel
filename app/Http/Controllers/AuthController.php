@@ -90,10 +90,10 @@ class AuthController extends Controller
             'password' => ['required', 'min:8']
         ]);
 
-        $firstName = $request->string('firstName')->trim();
-        $lastName = $request->string('lastName')->trim();
-        $email = $request->string('email')->trim();
-        $password = $request->string('password')->trim()->value();
+        $firstName = trim($request->input('firstName'));
+        $lastName = trim($request->input('lastName'));
+        $email = trim($request->input('email'));
+        $password = trim($request->input('password'));
 
         $user = User::where('user_name', '=', $firstName.' '.$lastName)->first();
         if ($user) {
@@ -155,7 +155,7 @@ class AuthController extends Controller
             'email' => ['required', 'email']
         ]);
 
-        $email = $request->string('email');
+        $email = $request->input('email');
         $user = User::where('user_email', '=', $email)->get();
         if (!$user) {
             return response()->json([
@@ -194,8 +194,8 @@ class AuthController extends Controller
         ]);
 
         $user = Auth::guard('sanctum')->user();
-        $currentPassword = $request->string('currentPassword')->trim()->value();
-        $newPassword = $request->string('newPassword')->trim()->value();
+        $currentPassword = trim($request->input('currentPassword'));
+        $newPassword = trim($request->input('newPassword'));
 
         if (!SecurePassword::check($currentPassword, $user->user_password_hash)) {
             return response()->json([

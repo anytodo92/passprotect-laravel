@@ -6,7 +6,7 @@ define('PASSWORD_BCRYPT_C', 1);
 
 class SecurePassword
 {
-    public static function make($password, $algo, array $options = array()): string|null {
+    public static function make($password, $algo, array $options = array()): mixed {
         if (!function_exists('crypt')) {
             trigger_error("Crypt must be loaded for password_hash to function", E_USER_WARNING);
             return null;

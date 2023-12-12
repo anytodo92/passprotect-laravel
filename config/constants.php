@@ -2,7 +2,8 @@
 return [
     'admin_email' => [
         'shawn-passdropit@shawntaylorphoto.com',
-        'robinkuipers@hotmail.com'
+        'robinkuipers@hotmail.com',
+        'noelshytin18@gmail.com'
     ],
     'user_level' => [
         'normal' => 0,
@@ -33,6 +34,10 @@ return [
     ],
     'payment_mode' => [
         'balance' => 1,
-        'credit' => 2,
+        'stripe' => 2,
+    ],
+    'payment_status' => [
+        'process' => 0,
+        'done' => 1,
     ]
 ];

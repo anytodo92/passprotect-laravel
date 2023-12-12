@@ -17,7 +17,7 @@ class LinkController extends Controller
             'url' => ['required']
         ]);
 
-        $url = $request->string('url')->value();
+        $url = trim($request->input('url'));
         $response = Curl::to($url)
             ->returnResponseObject()
             ->get();
@@ -43,15 +43,15 @@ class LinkController extends Controller
         ]);
 
         $files = $request->input('files');
-        $service = $request->integer('service', 0);
-        $link = $request->string('link')->value();
-        $password = $request->string('password')->value();
-        $linkType = $request->string('linkType')->value();
+        $service = intval($request->input('service', 0));
+        $link = $request->input('link');
+        $password = $request->input('password');
+        $linkType = intval($request->input('linkType', 0));
         $blTrackIp = $request->boolean('trackIp', false);
         $blEmailNotify = $request->boolean('emailNotify', false);
-        $cost = $request->integer('cost', 0);
-        $expiryCount = $request->integer('expiryCount', 0);
-        $expiryOn = $request->string('expiryOn')->value();
+        $cost = intval($request->input('cost', 0));
+        $expiryCount = intval($request->input('expiryCount', 0));
+        $expiryOn = $request->input('expiryOn');
 
         $isExists = FileListUser::where('passdrop_url', $link)
             ->get()
@@ -124,33 +124,31 @@ class LinkController extends Controller
             'expiryCount' => 'required',
         ]);
 
-        $id = $request->integer('id', 0);
+        $id = intval($request->input('id', 0));
         $files = $request->input('files');
-//        $service = $request->integer('service', 0);
-//        $link = $request->string('link')->value();
-//        $password = $request->string('password')->value();
-//        $linkType = $request->string('linkType')->value();
+//        $service = intval($request->input('service', 0));
+//        $link = $request->input('link');
+//        $password = $request->input('password');
+//        $linkType = intval($request->input('linkType', 0));
         $blTrackIp = $request->boolean('trackIp', false);
         $blEmailNotify = $request->boolean('emailNotify', false);
-        $cost = $request->integer('cost', 0);
-        $expiryCount = $request->integer('expiryCount', 0);
-        $expiryOn = $request->string('expiryOn')->value();
+        $cost = intval($request->input('cost', 0));
+        $expiryCount = intval($request->input('expiryCount', 0));
+        $expiryOn = $request->input('expiryOn');
 
-        $url = Arr::join(
-            Arr::map($files, function (array $file) {
-                return $file['url'];
-            }),
-            ','
-        );
+        $arr = [];
+        foreach ($files as $file) {
+            $arr[] = $file['url'];
+        }
+        $url = implode(',', $arr);
 
         $fileName = '';
         if (!empty($files[0]['name'])) {
-            $fileName = Arr::join(
-                Arr::map($files, function (array $file) {
-                    return $file['name'];
-                }),
-                ','
-            );
+            $arr = [];
+            foreach ($files as $file) {
+                $arr[] = $file['name'];
+            }
+            $fileName = implode(',', $arr);
         }
 
         $data = FileListUser::where('id', $id)->first();
@@ -260,8 +258,8 @@ class LinkController extends Controller
             'linkId' => 'required'
         ]);
 
-        $linkId = $request->integer('linkId');
-        $list = DB::query()
+        $linkId = $request->input('linkId');
+        $list = DB::table('')
             ->fromSub(function ($query) use ($linkId) {
                 $query->select(
                     DB::raw('sum(1) as download_count_by_ip'),
@@ -278,7 +276,7 @@ class LinkController extends Controller
                 DB::raw('sum(a.download_count_by_ip) as download_count_by_city')
             )
             ->groupBy('a.city')
-            ->get();
+            ->toSql();
 
         $list = $list->map(function ($item) {
            return [

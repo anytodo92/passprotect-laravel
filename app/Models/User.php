@@ -38,12 +38,5 @@ class User extends Authenticatable
         'user_password_hash'
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'user_password_hash' => 'hashed',
-    ];
+
 }
