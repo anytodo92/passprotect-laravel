@@ -86,6 +86,7 @@ Route::group([
             Route::post('/get-earning-link-list', [AdminController::class, 'getEarningLinkList']);
             Route::get('/get-user-list', [AdminController::class, 'getUserList']);
             Route::get('/export-activity', [AdminController::class, 'exportActivity']);
+            Route::post('/link-report', [AdminController::class, 'linkReport']);
         });
     });
 
@@ -115,6 +116,7 @@ Route::group([
             Route::post('/get-earning-link-list', [AdminController::class, 'getEarningLinkList']);
             Route::get('/get-user-list', [AdminController::class, 'getUserList']);
             Route::get('/export-activity', [AdminController::class, 'exportActivity']);
+            Route::post('/link-report', [AdminController::class, 'linkReport']);
         });
     });
 });
