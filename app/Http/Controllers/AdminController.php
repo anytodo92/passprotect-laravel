@@ -188,4 +188,59 @@ class AdminController extends Controller
             'path' => '/export/UserDataExport.xlsx'
         ]);
     }
+
+    public function linkReport(Request $request) {
+        if (!in_array(auth('sanctum')->user()->user_email, config('constants.admin_email'))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have a permission'
+            ]);
+        }
+
+        $request->validate([
+            'period' => 'required'
+        ]);
+
+        $period = $request->input('period');
+        $userName = trim($request->input('userName'));
+        $url = trim($request->input('url'));
+
+        $day = 1;
+        if ($period === '1') {
+            $day = 1;
+        } else if ($period === '2') {
+            $day = 7;
+        } else if ($period === '3') {
+            $day = 30;
+        }
+
+        $day = 1320;
+
+        $builder = DB::table('')
+            ->fromSub(function ($query) use ($day) {
+                return $query->from('daily_downloads')
+                    ->where('download_date', '>=', DB::raw('(curdate() - INTERVAL '.$day.' DAY)'))
+                    ->select('link_id', 'passdrop_url', DB::raw('CAST(SUM(IFNULL(downloads, 0)) as signed) as period_download_count'))
+                    ->groupBy(['link_id', 'passdrop_url']);
+            }, 'a')
+            ->join(DB::raw('file_list_user as b'), 'a.link_id', '=', 'b.id')
+            ->leftJoin(DB::raw('users as c'), 'b.user_id', '=', 'c.id');
+
+        if (!empty($url)) {
+            $builder = $builder->where('b.passdrop_url', $url);
+        }
+        if (!empty($userName)) {
+            $builder = $builder->where('c.user_name', $userName);
+        }
+
+        $result = $builder->select('c.id', 'b.passdrop_url', DB::raw('IFNULL(b.download_count, 0) as total_download_count'),
+                'a.period_download_count', DB::raw('b.expires_on as expiry_on'), DB::raw('b.expire_count as expiry_count'),
+                'c.user_name', 'c.user_email', 'c.is_pro')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $result
+        ]);
+    }
 }
