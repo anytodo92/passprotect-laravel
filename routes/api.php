@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\AuthController;
 use \App\Http\Controllers\LinkController;
 use \App\Http\Controllers\UserController;
+use \App\Http\Controllers\AdminController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -78,8 +79,13 @@ Route::group([
             Route::get('/cancel-pro', [UserController::class, 'cancelPro']);
             Route::post('/upload-logo', [UserController::class, 'uploadLogo']);
             Route::delete('/delete-logo', [UserController::class, 'deleteLogo']);
-            Route::post('/update-paypal', [UserController::class, 'updatePaypal']);
-            Route::post('/get-earning-link-list', [UserController::class, 'getEarningLinkList']);
+        });
+
+        Route::prefix('admin')->group(function () {
+            Route::post('/update-paypal', [AdminController::class, 'updatePaypal']);
+            Route::post('/get-earning-link-list', [AdminController::class, 'getEarningLinkList']);
+            Route::get('/get-user-list', [AdminController::class, 'getUserList']);
+            Route::get('/export-activity', [AdminController::class, 'exportActivity']);
         });
     });
 
@@ -102,8 +108,13 @@ Route::group([
             Route::get('/cancel-pro', [UserController::class, 'cancelPro']);
             Route::post('/upload-logo', [UserController::class, 'uploadLogo']);
             Route::delete('/delete-logo', [UserController::class, 'deleteLogo']);
-            Route::post('/update-paypal', [UserController::class, 'updatePaypal']);
-            Route::post('/get-earning-link-list', [UserController::class, 'getEarningLinkList']);
+        });
+
+        Route::prefix('admin')->group(function () {
+            Route::post('/update-paypal', [AdminController::class, 'updatePaypal']);
+            Route::post('/get-earning-link-list', [AdminController::class, 'getEarningLinkList']);
+            Route::get('/get-user-list', [AdminController::class, 'getUserList']);
+            Route::get('/export-activity', [AdminController::class, 'exportActivity']);
         });
     });
 });
