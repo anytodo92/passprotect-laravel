@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DailyDownload;
+use App\Models\IpTracker;
 use App\Models\PaidLink;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -407,6 +409,82 @@ class LinkController extends Controller
         if (!empty($linkInfo->user_id) && $seller) {
             $seller->balance = $seller->balance + $linkInfo->is_paid;
             $seller->save();
+        }
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
+
+    public function validateLink(Request $request) {
+        $request->validate([
+            'linkId' => 'required',
+            'password' => 'required'
+        ]);
+
+        $loggedInUser = auth('sanctum')->user();
+        $linkId = intval($request->input('linkId'));
+        $password = trim($request->input('password'));
+
+        $linkInfo = FileListUser::where('id', $linkId)
+            ->where('passdrop_pwd', $password)
+            ->first();
+
+        if (!$linkInfo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The password is invalid'
+            ]);
+        }
+
+        if ($loggedInUser && $loggedInUser->id === $linkInfo->user_id) {
+            return response()->json([
+                'success' => true
+            ]);
+        }
+
+        $linkInfo->download_count = $linkInfo->download_count + 1;
+        $linkInfo->last_download = date('Y-m-d H:i:s');
+        $linkInfo->save();
+
+        $today = date('Y-m-d');
+        $dailyDownload = DailyDownload::where('download_date', $today)
+            ->where('link_id', $linkInfo->id)
+            ->first();
+
+        if ($dailyDownload) {
+            $dailyDownload->downloads = $dailyDownload->downloads + 1;
+            $dailyDownload->save();
+        } else {
+            DailyDownload::create([
+                'user_id' => $linkInfo->user_id,
+                'link_id' => $linkInfo->id,
+                'passdrop_url' => $linkInfo->passdrop_url,
+                'downloads' => 1,
+                'download_date' => $today
+            ]);
+        }
+
+        if ($linkInfo->email_notify != 0 || $linkInfo->track_ip != 0) {
+            $ipAddress = $request->ip();
+            $url = 'http://api.ipstack.com/'.$ipAddress.'?access_key='.env('IP_TRACK_KEY').'&format=1';
+            $locationInfo = Curl::to($url)
+                ->asJson(true)
+                ->get();
+
+            if ($linkInfo->track_ip != 0) {
+                IpTracker::create([
+                    'link_id' => $linkInfo->id,
+                    'ip' => $ipAddress,
+                    'country' => $locationInfo['country_name'],
+                    'city' => $locationInfo['city'],
+                    'latlong' => $locationInfo['latitude'].','.$locationInfo['longitude']
+                ]);
+            }
+
+            if ($linkInfo->email_notify != 0) {
+                //Todo: implement email sending
+            }
         }
 
         return response()->json([
