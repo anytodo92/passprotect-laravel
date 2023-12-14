@@ -214,8 +214,6 @@ class AdminController extends Controller
             $day = 30;
         }
 
-        $day = 1320;
-
         $builder = DB::table('')
             ->fromSub(function ($query) use ($day) {
                 return $query->from('daily_downloads')
@@ -236,6 +234,39 @@ class AdminController extends Controller
         $result = $builder->select('c.id', 'b.passdrop_url', DB::raw('IFNULL(b.download_count, 0) as total_download_count'),
                 'a.period_download_count', DB::raw('b.expires_on as expiry_on'), DB::raw('b.expire_count as expiry_count'),
                 'c.user_name', 'c.user_email', 'c.is_pro')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $result
+        ]);
+    }
+
+    public function userAnalytics(Request $request): JsonResponse {
+        if (!in_array(auth('sanctum')->user()->user_email, config('constants.admin_email'))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have a permission'
+            ]);
+        }
+
+        $userName = trim($request->input('userName'));
+
+        $builder = DB::table('users', 'a')
+            ->leftJoinSub(function ($join) {
+                return $join->from('file_list_user')
+                    ->whereNotNull('user_id')
+                    ->select('user_id', DB::raw('SUM(1) as link_count'), DB::raw('CAST(SUM(IFNULL(download_count, 0)) as signed) as download_count'))
+                    ->groupBy('user_id');
+            }, 'b', 'a.id', '=', 'b.user_id');
+
+        if (!empty($userName)) {
+            $builder = $builder->where('a.user_name', '=', $userName);
+        }
+
+        $result = $builder->select('a.id', DB::raw('IFNULL(b.link_count, 0) as link_count'),
+            DB::raw('IFNULL(b.download_count, 0) as download_count'), 'a.user_name', 'a.user_email',
+            'a.stripe_id', 'a.subscription_id', 'a.logo', 'a.is_pro')
             ->get();
 
         return response()->json([
