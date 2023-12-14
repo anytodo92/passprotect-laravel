@@ -453,8 +453,12 @@ class LinkController extends Controller
             ->first();
 
         if ($dailyDownload) {
-            $dailyDownload->downloads = $dailyDownload->downloads + 1;
-            $dailyDownload->save();
+            DB::table('daily_downloads')
+                ->where('link_id', $linkInfo->id)
+                ->where('download_date', $today)
+                ->update([
+                    'downloads' => $dailyDownload->downloads + 1
+                ]);
         } else {
             DailyDownload::create([
                 'user_id' => $linkInfo->user_id,
