@@ -30,6 +30,7 @@ Route::group([
 
         Route::prefix('link')->group(function () {
             Route::post('/save-link', [LinkController::class, 'saveLink']);
+            Route::post('/get-link-detail', [LinkController::class, 'getLinkDetail']);
         });
 
         Route::prefix('user')->group(function () {
@@ -47,6 +48,7 @@ Route::group([
 
         Route::prefix('link')->group(function () {
             Route::post('/save-link', [LinkController::class, 'saveLink']);
+            Route::post('/get-link-detail', [LinkController::class, 'getLinkDetail']);
         });
 
         Route::prefix('user')->group(function () {
@@ -71,6 +73,7 @@ Route::group([
             Route::post('/update-link', [LinkController::class, 'updateLink']);
             Route::delete('/delete-link/{id}', [LinkController::class, 'deleteLink']);
             Route::post('/analytics', [LinkController::class, 'analytics']);
+            Route::post('/buy-link', [LinkController::class, 'buyLink']);
         });
 
         Route::prefix('user')->group(function () {
@@ -102,6 +105,7 @@ Route::group([
             Route::post('/update-link', [LinkController::class, 'updateLink']);
             Route::delete('/delete-link/{id}', [LinkController::class, 'deleteLink']);
             Route::post('/analytics', [LinkController::class, 'analytics']);
+            Route::post('/buy-link', [LinkController::class, 'buyLink']);
         });
 
         Route::prefix('user')->group(function () {

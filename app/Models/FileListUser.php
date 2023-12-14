@@ -31,6 +31,7 @@ class FileListUser extends Model
         'expires_on',
         'link_type',
         'track_ip',
+        'email_notify',
         'expire_count',
         'is_paid',
         'paypop_title',
