@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaidLink;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -12,6 +14,52 @@ use function Monolog\toArray;
 
 class LinkController extends Controller
 {
+    protected function getResponseLinkInfo($link): array {
+        $files = [];
+        $arrUrl = explode(',', $link->dropbox_url);
+        $arrName = explode(',', $link->filename);
+        for ($i = 0; $i < count($arrUrl); $i++) {
+            $file = [];
+            $file['url'] = $arrUrl[$i];
+            if (count($arrName) > $i) {
+                $file['name'] = $arrName[$i];
+            }
+
+            $files[] = $file;
+        }
+
+        $service = 1;
+        foreach (config('constants.service_type') as $k => $v) {
+            if ($v === $link->service) {
+                $service = $k;
+                break;
+            }
+        }
+
+        $linkType = 1;
+        foreach (config('constants.link_type') as $k => $v) {
+            if ($v === $link->link_type) {
+                $linkType = $k;
+                break;
+            }
+        }
+
+        return [
+            'id' => $link->id,
+            'files' => $files,
+            'link' => $link->passdrop_url,
+            'password' => $link->passdrop_pwd,
+            'emailNotify' => $link->email_notify === 1,
+            'trackIp' => $link->track_ip === 1,
+            'cost' => !empty($link->cost) ? $link->cost : 0,
+            'service' => $service,
+            'linkType' => $linkType,
+            'expiryCount' => $link->expiry_count,
+            'expiryOn' => $link->expiry_on,
+            'downloadCount' => $link->download_count,
+        ];
+    }
+
     public function checkGoogleLink(Request $request): JsonResponse {
         $request->validate([
             'url' => ['required']
@@ -63,24 +111,22 @@ class LinkController extends Controller
             ]);
         }
 
-        $url = Arr::join(
-            Arr::map($files, function (array $file) {
-                return $file['url'];
-            }),
-            ','
-        );
+        $arr = [];
+        foreach ($files as $file) {
+            $arr[] = $file['url'];
+        }
+        $url = implode(',', $arr);
 
         $fileName = '';
         if (!empty($files[0]['name'])) {
-            $fileName = Arr::join(
-                Arr::map($files, function (array $file) {
-                    return $file['name'];
-                }),
-                ','
-            );
+            $arr = [];
+            foreach ($files as $file) {
+                $arr[] = $file['name'];
+            }
+            $fileName = implode(',', $arr);
         }
 
-        $ret = FileListUser::create([
+        $insertData = [
             'dropbox_url' => $url,
             'passdrop_url' => $link,
             'passdrop_pwd' => $password,
@@ -96,7 +142,15 @@ class LinkController extends Controller
             'expires_on' => empty($expiryOn) ? null : $expiryOn,
             'is_paid' => empty($cost) ? null : $cost,
             'created_on' => date('Y-m-d')
-        ]);
+        ];
+
+//        return response()->json([
+//            'success' => false,
+//            'message' => 'testing',
+//            'data' => $insertData
+//        ]);
+
+        $ret = FileListUser::create($insertData);
 
         if ($ret) {
             return response()->json([
@@ -187,49 +241,7 @@ class LinkController extends Controller
             ->get();
 
         $list = $list->map(function ($item) {
-            $files = [];
-            $arrUrl = explode(',', $item->dropbox_url);
-            $arrName = explode(',', $item->filename);
-            for ($i = 0; $i < count($arrUrl); $i++) {
-                $file = [];
-                $file['url'] = $arrUrl[$i];
-                if (count($arrName) > $i) {
-                    $file['name'] = $arrName[$i];
-                }
-
-                $files[] = $file;
-            }
-
-            $service = 1;
-            foreach (config('constants.service_type') as $k => $v) {
-                if ($v === $item->service) {
-                    $service = $k;
-                    break;
-                }
-            }
-
-            $linkType = 1;
-            foreach (config('constants.link_type') as $k => $v) {
-                if ($v === $item->link_type) {
-                    $linkType = $k;
-                    break;
-                }
-            }
-
-            return [
-                'id' => $item->id,
-                'files' => $files,
-                'link' => $item->passdrop_url,
-                'password' => $item->passdrop_pwd,
-                'emailNotify' => $item->email_notify === 1,
-                'trackIp' => $item->track_ip === 1,
-                'cost' => !empty($item->cost) ? $item->cost : 0,
-                'service' => $service,
-                'linkType' => $linkType,
-                'expiryCount' => $item->expiry_count,
-                'expiryOn' => $item->expiry_on,
-                'downloadCount' => $item->download_count,
-            ];
+            return $this->getResponseLinkInfo($item);
         });
 
         return response()->json($list);
@@ -286,5 +298,119 @@ class LinkController extends Controller
            ];
         });
         return response()->json($list);
+    }
+
+    public function getLinkDetail(Request $request): JsonResponse {
+        $request->validate([
+            'url' => 'required'
+        ]);
+
+        $loggedInUser = auth('sanctum')->user();
+        $url = trim($request->input('url'));
+        $linkInfo = FileListUser::where('passdrop_url', $url)->first();
+
+        if (!$linkInfo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The link does not exist from db'
+            ]);
+        }
+
+        if (!empty($linkInfo->user_id)) {
+            $owner = User::where('id', $linkInfo->user_id)->first();
+        }
+
+        $requirePaid = false;
+        if ($linkInfo->is_paid > 0) {
+            if ($loggedInUser) {
+                if($loggedInUser->id != $linkInfo->user_id) {
+                    $paidInfo = PaidLink::where('link_id', $linkInfo->id)
+                        ->where('user_id', $loggedInUser->id)
+                        ->where('status', config('constants.payment_status.done'))
+                        ->first();
+                    $requirePaid = !$paidInfo;
+                } else {
+                    $requirePaid = false;
+                }
+            } else {
+                $requirePaid = true;
+            }
+        }
+
+        $t = $this->getResponseLinkInfo($linkInfo);
+
+        $ret = [
+            'id' => $t['id'],
+            'files' => $t['files'],
+            'link' => $t['link'],
+            'emailNotify' => $t['emailNotify'],
+            'trackIp' => $t['trackIp'],
+            'cost' => $t['cost'],
+            'service' => $t['service'],
+            'linkType' => $t['linkType'],
+            'expiryCount' => $t['expiryCount'],
+            'expiryOn' => $t['expiryOn'],
+            'downloadCount' => $t['downloadCount'],
+            'ownerName' => !empty($owner) ? $owner->user_name : '',
+            'ownerEmail' => !empty($owner) ? $owner->user_email : '',
+            'ownerLogo' => !empty($owner) ? $owner->logo : '',
+            'requirePaid' => $requirePaid,
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $ret
+        ]);
+    }
+
+    public function buyLink(Request $request): JsonResponse {
+        $request->validate([
+            'linkId' => 'required'
+        ]);
+
+        $linkId = intval($request->input('linkId'));
+        $linkInfo = FileListUser::where('id', $linkId)->first();
+        if (!$linkInfo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The link not exists'
+            ]);
+        }
+
+        $user = User::where('id', auth('sanctum')->user()->id)->first();
+        if ($user->balance < $linkInfo->is_paid) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your balance is not enough,please charge'
+            ]);
+        }
+
+        $ret = PaidLink::create([
+            'user_id' => $user->id,
+            'link_id' => $linkId,
+            'amount' => $linkInfo->is_paid,
+            'type' => config('constants.payment_mode.balance'),
+            'status' => config('constants.payment_status.done')
+        ]);
+
+        if (!$ret) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The operation is failed'
+            ]);
+        }
+
+        $user->balance = $user->balance - $linkInfo->is_paid;
+        $user->save();
+
+        $seller = User::where('id', $linkInfo->user_id)->first();
+        if (!empty($linkInfo->user_id) && $seller) {
+            $seller->balance = $seller->balance + $linkInfo->is_paid;
+            $seller->save();
+        }
+
+        return response()->json([
+            'success' => true
+        ]);
     }
 }
