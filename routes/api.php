@@ -31,6 +31,7 @@ Route::group([
         Route::prefix('link')->group(function () {
             Route::post('/save-link', [LinkController::class, 'saveLink']);
             Route::post('/get-link-detail', [LinkController::class, 'getLinkDetail']);
+            Route::post('/validate-link', [LinkController::class, 'validateLink']);
         });
 
         Route::prefix('user')->group(function () {
@@ -49,6 +50,7 @@ Route::group([
         Route::prefix('link')->group(function () {
             Route::post('/save-link', [LinkController::class, 'saveLink']);
             Route::post('/get-link-detail', [LinkController::class, 'getLinkDetail']);
+            Route::post('/validate-link', [LinkController::class, 'validateLink']);
         });
 
         Route::prefix('user')->group(function () {
