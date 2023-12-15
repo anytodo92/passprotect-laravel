@@ -6,6 +6,7 @@ use App\Models\DailyDownload;
 use App\Models\IpTracker;
 use App\Models\PaidLink;
 use App\Models\User;
+use App\Notifications\LinkDownload;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -486,8 +487,20 @@ class LinkController extends Controller
                 ]);
             }
 
-            if ($linkInfo->email_notify != 0) {
-                //Todo: implement email sending
+            if ($linkInfo->email_notify != 0 && !empty($linkInfo->user_id)) {
+                $owner = User::where('id', $linkInfo->user_id);
+
+                $isPassdropitRequest = $request->is('api/'.config('app.api-version').'/passdropit/*');
+                $fromAddress = $isPassdropitRequest ? env('MAIL_FROM_PASSDROPIT_ADDRESS') : env('MAIL_FROM_NOTIONS11_ADDRESS');
+                $fromName = $isPassdropitRequest ? 'Passdropit Notification' : 'Notions11 Notification';
+                $mailText = 'Your';
+                $mailText .= $isPassdropitRequest ? ' Passdropit' : ' Notions11';
+                $mailText .= ' link ';
+                $mailText .= $isPassdropitRequest ? config('constants.site_url.passdropit') : config('constants.site_url.notions11');
+                $mailText .= '/'.$linkInfo->passdrop_url.' was just accessed by a user in';
+                $mailText .= $locationInfo['city'].' '.$locationInfo['country_name'];
+
+                $owner->notify(new LinkDownload($fromAddress, $fromName, $mailText));
             }
         }
 

@@ -196,6 +196,7 @@ class UserController extends Controller
         ]);
 
         //Todo: do we have to store flags for email notify, track ip, drop folder in user setting table ?
+        //currently it is not need.
     }
 
     public function cancelPro(): JsonResponse {
@@ -216,6 +217,7 @@ class UserController extends Controller
             ]);
 
         //Todo: do we have to store flags for email notify, track ip, drop folder in user setting table ?
+        //currently it is not need.
 
         if (!$bl) {
             return response()->json([

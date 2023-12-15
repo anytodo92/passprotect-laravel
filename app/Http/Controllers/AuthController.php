@@ -134,6 +134,7 @@ class AuthController extends Controller
         }
 
         //Todo: Email scheduler
+        //currently it is not need.
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -184,7 +185,10 @@ class AuthController extends Controller
         $isPassdropitRequest = $request->is('api/'.config('app.api-version').'/passdropit/*');
         $url = $isPassdropitRequest ? config('constants.site_url.passdropit') : config('constants.site_url.notions11');
         $url = $url.'/reset-password/'.$token;
-        $user->notify(new PasswordReset($url));
+
+        $fromAddress = $isPassdropitRequest ? env('MAIL_FROM_PASSDROPIT_ADDRESS') : env('MAIL_FROM_NOTIONS11_ADDRESS');
+        $fromName = $isPassdropitRequest ? 'Passdropit Support' : 'Notions11 Support';
+        $user->notify(new PasswordReset($fromAddress, $fromName, $url));
 
         return response()->json([
             'success' => true,

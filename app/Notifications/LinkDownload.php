@@ -7,24 +7,24 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class PasswordReset extends Notification
+class LinkDownload extends Notification
 {
     use Queueable;
 
-    protected $url;
     protected $fromAddress;
     protected $name;
+    protected $mailText;
 
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($fromAddress, $name, $url)
+    public function __construct($fromAddress, $name, $mailText)
     {
-        $this->url = $url;
         $this->fromAddress = $fromAddress;
         $this->name = $name;
+        $this->mailText = $mailText;
     }
 
     /**
@@ -48,10 +48,8 @@ class PasswordReset extends Notification
     {
         return (new MailMessage)
                     ->from($this->fromAddress, $this->name)
-                    ->subject('Passdropit Password Recovery')
-                    ->line('Please use the link below to reset your password.')
-                    ->action('Link: ', $this->url)
-                    ->line('Thank you for using our application!');
+                    ->subject('Your link was accessed')
+                    ->line($this->mailText);
     }
 
     /**
