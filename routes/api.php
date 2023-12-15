@@ -25,7 +25,7 @@ Route::group([
             Route::post('/login', [AuthController::class, 'login']);
             Route::post('/register', [AuthController::class, 'register']);
             Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-//            Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('reset-password');
+            Route::post('/reset-password', [AuthController::class, 'resetPassword']);
         });
 
         Route::prefix('link')->group(function () {
@@ -44,7 +44,7 @@ Route::group([
             Route::post('/login', [AuthController::class, 'login']);
             Route::post('/register', [AuthController::class, 'register']);
             Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-//            Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('reset-password');
+            Route::post('/reset-password', [AuthController::class, 'resetPassword']);
         });
 
         Route::prefix('link')->group(function () {
@@ -65,7 +65,7 @@ Route::group([
 ], function () {
     Route::group(['prefix' => 'passdropit'], function () {
         Route::prefix('auth')->group(function () {
-            Route::post('/reset-password', [AuthController::class, 'changePassword']);
+            Route::post('/change-password', [AuthController::class, 'changePassword']);
             Route::post('/logout', [AuthController::class, 'logout']);
         });
 
@@ -98,7 +98,7 @@ Route::group([
 
     Route::group(['prefix' => 'notions11'], function () {
         Route::prefix('auth')->group(function () {
-            Route::post('/reset-password', [AuthController::class, 'changePassword']);
+            Route::post('/change-password', [AuthController::class, 'changePassword']);
             Route::post('/logout', [AuthController::class, 'logout']);
         });
 

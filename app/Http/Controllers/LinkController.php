@@ -6,9 +6,9 @@ use App\Models\DailyDownload;
 use App\Models\IpTracker;
 use App\Models\PaidLink;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Ixudra\Curl\Facades\Curl;
 use App\Models\FileListUser;
@@ -143,7 +143,7 @@ class LinkController extends Controller
             'expire_count' => $expiryCount,
             'expires_on' => empty($expiryOn) ? null : $expiryOn,
             'is_paid' => empty($cost) ? null : $cost,
-            'created_on' => date('Y-m-d')
+            'created_on' => Carbon::today()->format('Y-m-d')
         ];
 
 //        return response()->json([
@@ -444,10 +444,10 @@ class LinkController extends Controller
         }
 
         $linkInfo->download_count = $linkInfo->download_count + 1;
-        $linkInfo->last_download = date('Y-m-d H:i:s');
+        $linkInfo->last_download = Carbon::now()->format('Y-m-d H:i:s');
         $linkInfo->save();
 
-        $today = date('Y-m-d');
+        $today = Carbon::today()->format('Y-m-d');
         $dailyDownload = DailyDownload::where('download_date', $today)
             ->where('link_id', $linkInfo->id)
             ->first();

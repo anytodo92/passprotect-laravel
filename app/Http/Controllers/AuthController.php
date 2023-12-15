@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Heplers\SecurePassword;
+use App\Models\PasswordResetToken;
 use App\Models\User;
+use App\Notifications\PasswordReset;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -156,7 +159,7 @@ class AuthController extends Controller
         ]);
 
         $email = $request->input('email');
-        $user = User::where('user_email', '=', $email)->get();
+        $user = User::where('user_email', $email)->first();
         if (!$user) {
             return response()->json([
                 'success' => false,
@@ -164,10 +167,30 @@ class AuthController extends Controller
             ]);
         }
 
-        $url = env('FRONTEND_SITE_URL').'/reset-password/'.Hash::make();
-        //Todo: Sending email
+        $token = urlencode(str_shuffle(time().$email));
+        $ret = PasswordResetToken::create([
+            'user_id' => $user->id,
+            'token_signature' => hash('md5', $token),
+            'expires_at' => Carbon::now()->addHours(1)
+        ]);
 
-        return response()->json([]);
+        if (!$ret) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The operation is failed, please try again'
+            ]);
+        }
+
+        $isPassdropitRequest = $request->is('api/'.config('app.api-version').'/passdropit/*');
+        $url = $isPassdropitRequest ? config('constants.site_url.passdropit') : config('constants.site_url.notions11');
+        $url = $url.'/reset-password/'.$token;
+        $user->notify(new PasswordReset($url));
+
+        return response()->json([
+            'success' => true,
+//            'url' => $url,
+            'message' => 'Success! Please check your email for a password reset link.'
+        ]);
     }
 
     public function resetPassword(Request $request): JsonResponse {
@@ -179,12 +202,49 @@ class AuthController extends Controller
 
         $request->validate([
             'token' => ['required'],
-            'new_password' => ['required', 'min:8']
+            'newPassword' => ['required', 'min:8']
         ]);
 
-        //Todo: Implement reset password feature;
+        $token = trim($request->input('token'));
+        $newPassword = trim($request->input('newPassword'));
 
-        return response()->json([]);
+        $tokenData = PasswordResetToken::where('token_signature', hash('md5', $token))->first();
+        if (!$tokenData) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid token for resetting password'
+            ]);
+        }
+
+        $user = User::where('id', $tokenData->user_id)->first();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token does not correspond to any existing user'
+            ]);
+        }
+
+        if (Carbon::now()->greaterThan($tokenData->expires_at)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The reset password token has expired'
+            ]);
+        }
+
+        $user->user_password_hash = SecurePassword::make($newPassword, PASSWORD_BCRYPT_C);
+        if (!$user->save()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The operation is failed'
+            ]);
+        }
+
+        $tokenData->expires_at = Carbon::now();
+        $tokenData->save();
+
+        return response()->json([
+            'success' => true
+        ]);
     }
 
     public function changePassword(Request $request): JsonResponse {
@@ -208,7 +268,7 @@ class AuthController extends Controller
         if (!$user->save()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Operation is failed'
+                'message' => 'The operation is failed'
             ]);
         }
 

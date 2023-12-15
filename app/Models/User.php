@@ -38,5 +38,18 @@ class User extends Authenticatable
         'user_password_hash'
     ];
 
+    /**
+     * Route notifications for the mail channel.
+     *
+     * @param  \Illuminate\Notifications\Notification  $notification
+     * @return array|string
+     */
+    public function routeNotificationForMail($notification)
+    {
+        // Return email address only...
+        return $this->user_email;
 
+        // Return email address and name...
+        // return [$this->email_address => $this->name];
+    }
 }
