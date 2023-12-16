@@ -67,7 +67,7 @@ Route::group([
     Route::group(['prefix' => 'passdropit'], function () {
         Route::prefix('auth')->group(function () {
             Route::post('/change-password', [AuthController::class, 'changePassword']);
-            Route::post('/logout', [AuthController::class, 'logout']);
+            Route::get('/logout', [AuthController::class, 'logout']);
         });
 
         Route::prefix('link')->group(function () {
@@ -100,7 +100,7 @@ Route::group([
     Route::group(['prefix' => 'notions11'], function () {
         Route::prefix('auth')->group(function () {
             Route::post('/change-password', [AuthController::class, 'changePassword']);
-            Route::post('/logout', [AuthController::class, 'logout']);
+            Route::get('/logout', [AuthController::class, 'logout']);
         });
 
         Route::prefix('link')->group(function () {
