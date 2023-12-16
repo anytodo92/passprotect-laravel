@@ -22,6 +22,7 @@ Route::group([
 ], function () {
     Route::group(['prefix' => 'passdropit'], function () {
         Route::group(['prefix' => 'auth'], function () {
+            Route::post('/fb-login', [AuthController::class, 'facebookLogin']);
             Route::post('/login', [AuthController::class, 'login']);
             Route::post('/register', [AuthController::class, 'register']);
             Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);

@@ -26,11 +26,53 @@ class AuthController extends Controller
             'subscription_id' => $user->subscription_id,
             'paypal_id' => $user->paypal_id,
             'balance' => $user->balance,
+            'logo' => $user->logo,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
         ];
 
         return $ret;
+    }
+
+    public function facebookLogin(Request $request): JsonResponse {
+        if (Auth::guard('sanctum')->user()) {
+            return response()->json([
+                'message' => 'Already authenticated'
+            ]);
+        }
+
+        $request->validate([
+            'email' => ['required', 'email'],
+            'name' => ['required']
+        ]);
+
+        $email = trim($request->input('email'));
+        $name = trim($request->input('name'));
+
+        $user = User::where('user_email', $email)->first();
+        if (!$user) {
+            $password = 'fblogin*^#7P@d';
+            $user = User::create([
+                'user_name' => $name,
+                'user_email' => $email,
+                'user_password_hash' => $password,//SecurePassword::make($password, PASSWORD_BCRYPT_C),
+                'is_pro' => config('constants.user_level.normal'),
+                'paypal_id' => 0,
+                'stripe_id' => 0,
+                'subscription_id' => 0,
+                'logo' => '',
+                'balance' => 0
+            ]);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+        $user = $this->getResponseUserData($user);
+        return response()->json([
+            'success' => true,
+            'user' => $user,
+            'auth_token' => $token,
+            'token_type' => 'bearer'
+        ], 200);
     }
 
     /**
