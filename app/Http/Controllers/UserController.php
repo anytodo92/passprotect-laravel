@@ -25,6 +25,7 @@ class UserController extends Controller
             'subscription_id' => $user->subscription_id,
             'paypal_id' => $user->paypal_id,
             'balance' => $user->balance,
+            'logo' => $user->logo,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
         ];
