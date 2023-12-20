@@ -251,6 +251,10 @@ class AdminController extends Controller
         }
 
         $userName = trim($request->input('userName'));
+        $page = intval($request->input('page', 0));
+        $rowPerPage = intval($request->input('rowPerPage', 30));
+
+        $start = $page * $rowPerPage;
 
         $builder = DB::table('users', 'a')
             ->leftJoinSub(function ($join) {
@@ -264,14 +268,22 @@ class AdminController extends Controller
             $builder = $builder->where('a.user_name', '=', $userName);
         }
 
-        $result = $builder->select('a.id', DB::raw('IFNULL(b.link_count, 0) as link_count'),
+        $builder = $builder->select('a.id', DB::raw('IFNULL(b.link_count, 0) as link_count'),
             DB::raw('IFNULL(b.download_count, 0) as download_count'), 'a.user_name', 'a.user_email',
-            'a.stripe_id', 'a.subscription_id', 'a.logo', 'a.is_pro')
+            'a.stripe_id', 'a.subscription_id', 'a.logo', 'a.is_pro');
+
+        $count = $builder->get()->count();
+        $count = ceil($count / $rowPerPage);
+        $result = $builder->offset($start)
+            ->limit($rowPerPage)
             ->get();
 
         return response()->json([
             'success' => true,
-            'data' => $result
+            'data' => $result,
+            'page' => $page,
+            'rowPerPage' => $rowPerPage,
+            'count' => $count,
         ]);
     }
 }
