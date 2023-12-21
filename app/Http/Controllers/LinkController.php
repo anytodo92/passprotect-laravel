@@ -291,7 +291,7 @@ class LinkController extends Controller
                 DB::raw('sum(a.download_count_by_ip) as download_count_by_city')
             )
             ->groupBy('a.city')
-            ->toSql();
+            ->get();
 
         $list = $list->map(function ($item) {
            return [
