@@ -488,19 +488,21 @@ class LinkController extends Controller
             }
 
             if ($linkInfo->email_notify != 0 && !empty($linkInfo->user_id)) {
-                $owner = User::where('id', $linkInfo->user_id);
+                $owner = User::where('id', $linkInfo->user_id)->first();
 
-                $isPassdropitRequest = $request->is('api/'.config('app.api-version').'/passdropit/*');
-                $fromAddress = $isPassdropitRequest ? env('MAIL_FROM_PASSDROPIT_ADDRESS') : env('MAIL_FROM_NOTIONS11_ADDRESS');
-                $fromName = $isPassdropitRequest ? 'Passdropit Notification' : 'Notions11 Notification';
-                $mailText = 'Your';
-                $mailText .= $isPassdropitRequest ? ' Passdropit' : ' Notions11';
-                $mailText .= ' link ';
-                $mailText .= $isPassdropitRequest ? config('constants.site_url.passdropit') : config('constants.site_url.notions11');
-                $mailText .= '/'.$linkInfo->passdrop_url.' was just accessed by a user in';
-                $mailText .= $locationInfo['city'].' '.$locationInfo['country_name'];
+                if ($owner) {
+                    $isPassdropitRequest = $request->is('api/'.config('app.api-version').'/passdropit/*');
+                    $fromAddress = $isPassdropitRequest ? env('MAIL_FROM_PASSDROPIT_ADDRESS') : env('MAIL_FROM_NOTIONS11_ADDRESS');
+                    $fromName = $isPassdropitRequest ? 'Passdropit Notification' : 'Notions11 Notification';
+                    $mailText = 'Your';
+                    $mailText .= $isPassdropitRequest ? ' Passdropit' : ' Notions11';
+                    $mailText .= ' link ';
+                    $mailText .= $isPassdropitRequest ? config('constants.site_url.passdropit') : config('constants.site_url.notions11');
+                    $mailText .= '/'.$linkInfo->passdrop_url.' was just accessed by a user in';
+                    $mailText .= $locationInfo['city'].' '.$locationInfo['country_name'];
 
-                $owner->notify(new LinkDownload($fromAddress, $fromName, $mailText));
+                    $owner->notify(new LinkDownload($fromAddress, $fromName, $mailText));
+                }
             }
         }
 
