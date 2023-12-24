@@ -50,7 +50,7 @@ class PasswordReset extends Notification
                     ->from($this->fromAddress, $this->name)
                     ->subject('Passdropit Password Recovery')
                     ->line('Please use the link below to reset your password.')
-                    ->action('Link >> ', $this->url)
+                    ->action('Link', $this->url)
                     ->line('Thank you for using our application!');
     }
 
