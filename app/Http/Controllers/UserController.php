@@ -10,9 +10,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Stripe\StripeClient;
+use Illuminate\Support\Facades\File;
 
 class UserController extends Controller
 {
+    public function createStorageLink() {
+        File::link(
+            storage_path('app/public'), public_path('storage')
+        );
+    }
+
     public function getResponseUserData($user): array {
         $level = $user->is_pro ? config('constants.user_level.pro') : config('constants.user_level.normal');
         $level = $user->user_email == in_array($user->user_email, config('constants.admin_email')) ? config('constants.user_level.super') : $level;
@@ -288,5 +295,35 @@ class UserController extends Controller
         ]);
     }
 
+    /*public function capturehook(){
+        Stripe::setApiKey("sk_test_51M5Q13E4EcK5n9JaUhs9QmyWqzNl8jy5QhM8cQxORU0RLMk0VtTrTIKSnpDnPLytssrRfqw84Coiq7ymi4ISTyXV00OCRcG1R8");
 
+        $webhookContent = "";
+        $webhook = fopen('php://input' , 'rb');
+        while (!feof($webhook)) {
+            $webhookContent .= fread($webhook, 4096);
+        }
+        fclose($webhook);
+        //decode JSON
+        $dat = json_decode($webhookContent,true);
+
+        $query = $this->db->get_where('users', array('stripe_id' => $dat['data']['object']['customer']));
+        if($query->num_rows() > 0){ // if user exist
+            $user = $query->row();
+            $user = $user->user_id;
+
+
+            if($dat['type'] == 'customer.subscription.deleted'){ // Event Sunscription Deleted
+                $query = $this->db->query("update users set is_pro = 0, stripe_id = null, subscription_id = null where user_id ='".$user."'"); // Removes subscription settings
+                if($query){
+                    $query = $this->db->query("delete from user_settings where id = '".$user."'"); // Downgrade to normal user
+                    $query = $this->db->query("update file_list_user set expires_on = null, track_ip = 0, email_notify = 0, expire_count = 0 where user_id ='".$user."'"); // clear Pro settings
+                }
+            }// End of Event Sunscription Deleted
+
+        }// End of if user exist
+
+
+        exit(header("Status: 200 OK"));
+    }*/
 }
